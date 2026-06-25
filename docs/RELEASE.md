@@ -20,7 +20,7 @@ Link npm to GitHub, then for **each package** on [npmjs.com](https://www.npmjs.c
 
 Names must match **exactly** (case-sensitive). No `NPM_TOKEN` secret is required when trusted publishing is configured.
 
-**Legacy fallback:** add an npm Automation token as repo secret `NPM_TOKEN` and restore `NODE_AUTH_TOKEN` in the publish steps.
+**Legacy fallback:** add an npm Automation token as repo secret `NPM_TOKEN` and set `NODE_AUTH_TOKEN` in the publish steps. Do **not** set `NODE_AUTH_TOKEN` when trusted publishing is active — an expired token overrides OIDC and causes `E404` on publish.
 
 ## Version bump
 

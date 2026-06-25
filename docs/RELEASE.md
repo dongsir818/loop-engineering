@@ -20,7 +20,11 @@ Link npm to GitHub, then for **each package** on [npmjs.com](https://www.npmjs.c
 
 Names must match **exactly** (case-sensitive). No `NPM_TOKEN` secret is required when trusted publishing is configured.
 
-**Legacy fallback:** add an npm Automation token as repo secret `NPM_TOKEN` and set `NODE_AUTH_TOKEN` in the publish steps. Do **not** set `NODE_AUTH_TOKEN` when trusted publishing is active — an expired token overrides OIDC and causes `E404` on publish.
+**Auth:** release workflows use repo secret `NPM_TOKEN` (Automation token). Refresh it at [npmjs.com](https://www.npmjs.com/) → Access Tokens if publishes fail with `E401`/`E404`.
+
+**Retry without re-tagging:** Actions → Release workflow → **Run workflow** → enter the tag (e.g. `loop-audit-v1.4.2`).
+
+**Trusted publishing (optional):** configure per package on npm; OIDC alone is not sufficient unless `NPM_TOKEN` is removed and trusted publishers are verified.
 
 ## Version bump
 

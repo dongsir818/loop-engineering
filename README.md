@@ -240,7 +240,7 @@ MIT
 
 ---
 
-*Practical, tool-aware reference for loop engineering — patterns you can clone, checklists you can ship against, and stories that include what broke.*
+*Practical, tool-aware reference for loop engineering, patterns you can clone, checklists you can ship against, and stories that include what broke.*
 
 <p align="center">
   <a href="https://cobusgreyling.substack.com/p/loop-engineering">Essay</a>

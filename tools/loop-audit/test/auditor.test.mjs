@@ -22,6 +22,7 @@ function emptySignals() {
     mcp: { present: false },
     worktreeEvidence: { present: false },
     registry: { present: false },
+    constraints: { present: false, hasConstraintsSkill: false },
     cost: { budgetDoc: false, runLog: false, loopMdBudget: false, budgetSkill: false },
     loopActivity: { present: false, evidence: [] },
   };
@@ -183,6 +184,31 @@ test('auditProject: L2 with verifier skill', async () => {
     const result = await auditProject(dir);
     assert.equal(result.level, 'L2');
     assert.ok(result.signals.verifier.present);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('auditProject: opencode.json verifier agent counts as loop-verifier', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-audit-opencode-'));
+  try {
+    await writeFile(path.join(dir, 'STATE.md'), '# State\n');
+    await mkdir(path.join(dir, 'skills', 'loop-triage'), { recursive: true });
+    await writeFile(
+      path.join(dir, 'skills', 'loop-triage', 'SKILL.md'),
+      '---\nname: loop-triage\ndescription: triage\n---\n# Triage\n',
+    );
+    await writeFile(
+      path.join(dir, 'opencode.json.example'),
+      JSON.stringify({
+        agent: {
+          verifier: { name: 'verifier', description: 'Checker agent' },
+        },
+      }),
+    );
+    const result = await auditProject(dir);
+    assert.ok(result.signals.verifier.present);
+    assert.equal(result.level, 'L2');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

@@ -1,12 +1,13 @@
 # Release playbook — npm packages
 
-This repo ships two public npm packages from `tools/`:
+This repo ships four public npm packages from `tools/`:
 
 | Package | Directory | Release tag |
 |---------|-----------|-------------|
 | `@cobusgreyling/loop-audit` | `tools/loop-audit` | `loop-audit-v*` |
 | `@cobusgreyling/loop-init` | `tools/loop-init` | `loop-init-v*` |
 | `@cobusgreyling/loop-cost` | `tools/loop-cost` | `loop-cost-v*` |
+| `@cobusgreyling/loop-sync` | `tools/loop-sync` | `loop-sync-v*` |
 
 ## One-time setup (trusted publishing — recommended)
 
@@ -17,6 +18,7 @@ Link npm to GitHub, then for **each package** on [npmjs.com](https://www.npmjs.c
 | `@cobusgreyling/loop-audit` | `cobusgreyling/loop-engineering` | `release-loop-audit.yml` |
 | `@cobusgreyling/loop-init` | `cobusgreyling/loop-engineering` | `release-loop-init.yml` |
 | `@cobusgreyling/loop-cost` | `cobusgreyling/loop-engineering` | `release-loop-cost.yml` |
+| `@cobusgreyling/loop-sync` | `cobusgreyling/loop-engineering` | `release-loop-sync.yml` |
 
 Names must match **exactly** (case-sensitive). No `NPM_TOKEN` secret is required when trusted publishing is configured.
 
@@ -46,9 +48,13 @@ git push origin loop-init-v1.2.0
 # loop-cost (bundles patterns/registry.yaml)
 git tag loop-cost-v1.0.0
 git push origin loop-cost-v1.0.0
+
+# loop-sync (drift detection between STATE.md and LOOP.md)
+git tag loop-sync-v1.0.0
+git push origin loop-sync-v1.0.0
 ```
 
-Workflows: `.github/workflows/release-loop-audit.yml`, `.github/workflows/release-loop-init.yml`, `.github/workflows/release-loop-cost.yml`.
+Workflows: `.github/workflows/release-loop-audit.yml`, `.github/workflows/release-loop-init.yml`, `.github/workflows/release-loop-cost.yml`, `.github/workflows/release-loop-sync.yml`.
 
 ## Verify after publish
 
@@ -56,6 +62,7 @@ Workflows: `.github/workflows/release-loop-audit.yml`, `.github/workflows/releas
 npx @cobusgreyling/loop-audit --help
 npx @cobusgreyling/loop-init --help
 npx @cobusgreyling/loop-cost --help
+npx @cobusgreyling/loop-sync --help
 
 mkdir /tmp/loop-init-test && cd /tmp/loop-init-test
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok --dry-run

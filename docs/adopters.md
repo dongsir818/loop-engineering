@@ -2,6 +2,8 @@
 
 Forks and stars mean people are trying this in their own stacks. If you run a loop from this repo (or adapted from it), add yourself here via PR.
 
+**Pinned:** [Add your project — Loop Ready badge + adopters list](https://github.com/cobusgreyling/loop-engineering/discussions/92) (Discussions)
+
 ## Loop Ready badge
 
 Show your readiness level in your README:
@@ -39,7 +41,7 @@ Or open a PR that adds a row to the table below:
 
 ## Show & tell
 
-Prefer chat over a PR? Post in [GitHub Discussions → Show your loop](https://github.com/cobusgreyling/loop-engineering/discussions/categories/show-your-loop) with:
+Prefer chat over a PR? Post in [GitHub Discussions → Show and tell](https://github.com/cobusgreyling/loop-engineering/discussions/categories/show-and-tell) with:
 
 1. Which pattern you picked and why
 2. Your first `/loop` or scheduler command

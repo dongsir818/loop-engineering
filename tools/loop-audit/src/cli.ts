@@ -63,6 +63,9 @@ try {
     console.log('  # Codex:');
     console.log('  cp -r starters/minimal-loop-codex/.codex/skills/loop-triage .codex/skills/');
     console.log('  cp starters/minimal-loop-codex/.codex/agents/verifier.toml .codex/agents/');
+    console.log('  # Opencode:');
+    console.log('  npx @cobusgreyling/loop-init . --pattern daily-triage --tool opencode');
+    console.log('  # or: cp starters/minimal-loop-opencode/opencode.json.example opencode.json');
     console.log('  # All tools:');
     console.log('  cp starters/minimal-loop/STATE.md.example STATE.md   # or -claude / -codex variant');
     console.log('  cp starters/minimal-loop/LOOP.md .');

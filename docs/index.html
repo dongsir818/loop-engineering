@@ -8,18 +8,21 @@ title: Loop Engineering — Showcase
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Loop Engineering — Design systems that prompt your agents</title>
-  <meta name="description" content="The practical reference for loop engineering. Patterns, starters, checklists, and tooling for Grok, Claude Code, and Codex.">
+  <meta name="description" content="The practical reference for loop engineering. Patterns, starters, checklists, and tooling for Grok, Claude Code, Codex, OpenClaw, and Opencode.">
   <meta property="og:title" content="Loop Engineering">
-  <meta property="og:description" content="Stop prompting. Start designing loops.">
+  <meta property="og:description" content="Stop prompting. Design the loop. Get a score. Two npx commands.">
   <meta property="og:image" content="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-social-banner.jpg">
   <link rel="stylesheet" href="{{ site.baseurl }}/assets/css/showcase.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⟳</text></svg>">
+  <link rel="icon" href="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-logo.svg">
 </head>
 <body>
 
 <nav class="nav">
   <div class="wrap nav-inner">
-    <a href="#" class="logo">Loop <span>Engineering</span></a>
+    <a href="#" class="logo">
+      <img src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-logo.svg" alt="" width="28" height="28" style="vertical-align:-6px;margin-right:8px;border-radius:6px;" />
+      Loop <span>Engineering</span>
+    </a>
     <button
       type="button"
       class="nav-toggle"
@@ -49,28 +52,30 @@ title: Loop Engineering — Showcase
 
 <header class="hero wrap">
   <div class="badge">Open source · Tool-agnostic · Production-ready · L3 dogfood · 7 patterns · Interactive tools</div>
-  <h1>Design the system<br>that prompts your agents</h1>
+  <h1>Stop prompting.<br>Design the loop.<br>Get a score.</h1>
   <p class="lead">
-    Loop engineering moves you from "I prompt → agent responds → I prompt again"
-    to "I design the autonomous system that discovers work, verifies results, and drives progress."
+    Run one command in any repo. <code>loop-init</code> scaffolds your loop and prints your <strong>Loop Ready</strong> score plus the first run line.
   </p>
+  <div class="code-block" style="max-width:720px;margin:0 auto 24px;">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span>terminal — try now</span>
+      <button onclick="copyNpxInit()" class="copy-btn">Copy</button>
+    </div>
+    <pre>npx @cobusgreyling/loop-init .</pre>
+  </div>
   <div class="hero-cta">
-    <a href="https://github.com/cobusgreyling/loop-engineering/tree/main/starters/minimal-loop" class="btn btn-primary">Clone a Starter →</a>
+    <a href="#start" class="btn btn-primary">Try in 60 seconds →</a>
+    <a href="https://github.com/cobusgreyling/loop-engineering/blob/main/docs/QUICKSTART.md" class="btn btn-ghost">Quickstart</a>
     <a href="https://cobusgreyling.substack.com/p/loop-engineering" class="btn btn-ghost">Read the Essay</a>
-    <a href="https://github.com/cobusgreyling/loop-engineering/blob/main/docs/primitives-matrix.md" class="btn btn-ghost">Primitives Matrix</a>
     <a href="https://cobusgreyling.github.io/goal-engineering/" class="btn btn-ghost">Goal Engineering</a>
   </div>
-  <p style="text-align:center; margin-top:-12px; margin-bottom:32px; font-size:0.9rem; color:var(--text-muted);">
-    Or try instantly: <code style="background:#050810;padding:2px 6px;border-radius:4px;">npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok</code>
-    &nbsp; <button onclick="copyNpxInit()" class="copy-btn" style="vertical-align:middle;">Copy</button>
-    &nbsp;&nbsp; <code style="background:#050810;padding:2px 6px;border-radius:4px;">npx @cobusgreyling/loop-audit . --suggest</code>
-    <button onclick="copyNpxAudit()" class="copy-btn" style="vertical-align:middle;">Copy</button>
-  </p>
   <img
     class="hero-img"
-    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-engineering-social-banner.jpg"
-    alt="Loop Engineering — Design the system that prompts your agents"
+    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-audit-demo.gif"
+    alt="Loop Ready score climbs from 10 to 100"
     loading="lazy"
+    style="margin-top:24px;"
   />
 </header>
 
@@ -95,7 +100,7 @@ title: Loop Engineering — Showcase
   <p class="section-desc">You design it once. You're not prompting every micro-step.</p>
   <img
     class="hero-img"
-    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-anatomy.jpg"
+    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/loop-cycle-animated.svg"
     alt="Anatomy of a loop — schedule, triage, state, worktree, implementer, verifier, MCP, human gate"
     loading="lazy"
     style="margin-bottom: 24px;"
@@ -122,7 +127,7 @@ title: Loop Engineering — Showcase
 <section id="primitives" class="wrap">
   <p class="section-label">Building blocks</p>
   <h2 class="section-title">Five primitives + memory</h2>
-  <p class="section-desc">The same shape works in Grok, Claude Code, and Codex. Tool names differ; capabilities converge.</p>
+  <p class="section-desc">The same shape works in Grok, Claude Code, Codex, OpenClaw, Opencode, and Actions. Tool names differ; capabilities converge.</p>
   <div class="primitives">
     <div class="primitive">
       <div class="icon">⏱</div>
@@ -159,6 +164,8 @@ title: Loop Engineering — Showcase
     <span class="tool-pill grok">Grok Build</span>
     <span class="tool-pill claude">Claude Code</span>
     <span class="tool-pill codex">Codex</span>
+    <span class="tool-pill openclaw">OpenClaw</span>
+    <span class="tool-pill opencode">Opencode</span>
     <span class="tool-pill">GitHub Actions</span>
   </div>
   <p style="text-align: center; margin-top: 24px;">
@@ -170,6 +177,13 @@ title: Loop Engineering — Showcase
   <p class="section-label">Copy & run</p>
   <h2 class="section-title">Production patterns</h2>
   <p class="section-desc">Documented loops with scheduling, skills, state schemas, verification, and honest failure modes.</p>
+  <img
+    class="hero-img"
+    src="https://raw.githubusercontent.com/cobusgreyling/loop-engineering/main/assets/visuals/patterns-overview.svg"
+    alt="Seven production loop patterns — cadence and token cost overview"
+    loading="lazy"
+    style="margin-bottom: 28px;"
+  />
   <div class="patterns">
     <article class="pattern-card">
       <span class="tag">Most popular</span>
@@ -497,7 +511,7 @@ npx @cobusgreyling/loop-audit . --suggest
 <script>
 // Copy helpers for hero
 function copyNpxInit() {
-  const txt = 'npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok';
+  const txt = 'npx @cobusgreyling/loop-init .';
   navigator.clipboard.writeText(txt).then(() => {
     const b = event.currentTarget; // best effort
   });

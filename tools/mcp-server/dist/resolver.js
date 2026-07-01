@@ -1,5 +1,26 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
+const STATE_FILE_CANDIDATES = [
+    'STATE.md',
+    'pr-babysitter-state.md',
+    'ci-sweeper-state.md',
+    'post-merge-state.md',
+    'dependency-sweeper-state.md',
+    'changelog-drafter-state.md',
+    'issue-triage-state.md',
+];
+/** Reject path segments that could escape the project root. */
+export function assertSafeSegment(name, label) {
+    if (!name || name.includes('\0') || name.includes('..') || name.includes('/') || name.includes('\\')) {
+        throw new Error(`Invalid ${label}: ${name}`);
+    }
+}
+async function allowedPatternIds(root) {
+    const registry = await loadRegistry(root);
+    if (registry)
+        return new Set(registry.patterns.map((p) => p.id));
+    return new Set(await listPatternDocs(root));
+}
 export async function fileExists(p) {
     try {
         await stat(p);
@@ -33,6 +54,15 @@ export async function loadRegistry(root) {
     return parse(content);
 }
 export async function loadPatternDoc(root, patternId) {
+    try {
+        assertSafeSegment(patternId, 'patternId');
+    }
+    catch {
+        return null;
+    }
+    const allowed = await allowedPatternIds(root);
+    if (!allowed.has(patternId))
+        return null;
     const filePath = path.join(root, 'patterns', `${patternId}.md`);
     return readFileIfExists(filePath);
 }
@@ -69,20 +99,19 @@ export async function loadSkill(root, skillName) {
 }
 export async function loadState(root, stateFile) {
     const target = stateFile ?? 'STATE.md';
+    try {
+        assertSafeSegment(target, 'stateFile');
+    }
+    catch {
+        return null;
+    }
+    if (!STATE_FILE_CANDIDATES.includes(target))
+        return null;
     return readFileIfExists(path.join(root, target));
 }
 export async function listStateFiles(root) {
-    const candidates = [
-        'STATE.md',
-        'pr-babysitter-state.md',
-        'ci-sweeper-state.md',
-        'post-merge-state.md',
-        'dependency-sweeper-state.md',
-        'changelog-drafter-state.md',
-        'issue-triage-state.md',
-    ];
     const found = [];
-    for (const f of candidates) {
+    for (const f of STATE_FILE_CANDIDATES) {
         if (await fileExists(path.join(root, f)))
             found.push(f);
     }

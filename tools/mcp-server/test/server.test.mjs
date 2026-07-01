@@ -327,6 +327,29 @@ test('loadPatternDoc returns null for missing pattern', async () => {
   }
 });
 
+test('loadPatternDoc rejects path traversal pattern ids', async () => {
+  const root = await setup();
+  try {
+    assert.equal(await loadPatternDoc(root, '../README'), null);
+    assert.equal(await loadPatternDoc(root, 'daily-triage/..'), null);
+    assert.equal(await loadPatternDoc(root, '..\\README'), null);
+  } finally {
+    await cleanup();
+  }
+});
+
+test('loadState rejects path traversal state files', async () => {
+  const root = await setup();
+  try {
+    assert.equal(await loadState(root, '../LOOP.md'), null);
+    assert.equal(await loadState(root, 'STATE.md/../../LOOP.md'), null);
+    const state = await loadState(root, 'STATE.md');
+    assert.ok(state?.includes('Fix CI'));
+  } finally {
+    await cleanup();
+  }
+});
+
 // ── Integration: real server over stdio ────────────────────────────
 
 test('server lists all tools over stdio', async () => {

@@ -1,3 +1,5 @@
+/** Reject path segments that could escape the project root. */
+export declare function assertSafeSegment(name: string, label: string): void;
 export declare function fileExists(p: string): Promise<boolean>;
 export declare function resolveProjectRoot(hint?: string): Promise<string>;
 export declare function readFileIfExists(filePath: string): Promise<string | null>;

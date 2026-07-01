@@ -9,9 +9,20 @@ import { promisify } from 'node:util';
 const exec = promisify(execFile);
 const CLI = path.resolve('dist/cli.js');
 
+test('bundle-assets tolerates concurrent rebuilds', async () => {
+  await Promise.all([
+    exec('node', ['scripts/bundle-assets.mjs']),
+    exec('node', ['scripts/bundle-assets.mjs']),
+  ]);
+  await access(path.join('starters', 'issue-triage', 'README.md'));
+  await access(path.join('templates', 'SKILL.md.issue-triage'));
+  await access('registry.yaml');
+});
+
 test('loop-init --help exits 0', async () => {
   const { stdout } = await exec('node', [CLI, '--help']);
   assert.match(stdout, /changelog-drafter/);
+  assert.match(stdout, /opencode/);
 });
 
 test('loop-init dry-run scaffolds daily-triage', async () => {
@@ -28,6 +39,25 @@ test('loop-init dry-run scaffolds daily-triage', async () => {
     ]);
     assert.match(stdout, /loop-init: daily-triage/);
     assert.match(stdout, /would copy|copied/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('loop-init prints Loop Ready score after scaffold', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-audit-'));
+  try {
+    const { stdout } = await exec('node', [
+      CLI,
+      dir,
+      '--pattern',
+      'daily-triage',
+      '--tool',
+      'grok',
+    ]);
+    assert.match(stdout, /Loop Ready:/);
+    assert.match(stdout, /\/100/);
+    assert.match(stdout, /--badge/);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -59,6 +89,22 @@ test('loop-init rejects unknown tool', async () => {
     () => exec('node', [CLI, '.', '--pattern', 'daily-triage', '--tool', 'emacs', '--dry-run']),
     (err) => err.stderr?.includes('Unknown tool') || err.message?.includes('Unknown tool'),
   );
+});
+
+test('loop-init scaffolds daily-triage for opencode', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'loop-init-opencode-'));
+  try {
+    await exec('node', [CLI, dir, '--pattern', 'daily-triage', '--tool', 'opencode']);
+    await access(path.join(dir, 'STATE.md'));
+    await access(path.join(dir, 'LOOP.md'));
+    await access(path.join(dir, 'AGENTS.md'));
+    await access(path.join(dir, 'opencode.json'));
+    await access(path.join(dir, 'skills', 'loop-triage', 'SKILL.md'));
+    await access(path.join(dir, 'loop-budget.md'));
+    await access(path.join(dir, 'loop-run-log.md'));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });
 
 test('loop-init scaffolds ci-sweeper with bundled assets', async () => {

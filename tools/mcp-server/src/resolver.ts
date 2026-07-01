@@ -1,6 +1,29 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 
+const STATE_FILE_CANDIDATES = [
+  'STATE.md',
+  'pr-babysitter-state.md',
+  'ci-sweeper-state.md',
+  'post-merge-state.md',
+  'dependency-sweeper-state.md',
+  'changelog-drafter-state.md',
+  'issue-triage-state.md',
+] as const;
+
+/** Reject path segments that could escape the project root. */
+export function assertSafeSegment(name: string, label: string): void {
+  if (!name || name.includes('\0') || name.includes('..') || name.includes('/') || name.includes('\\')) {
+    throw new Error(`Invalid ${label}: ${name}`);
+  }
+}
+
+async function allowedPatternIds(root: string): Promise<Set<string>> {
+  const registry = await loadRegistry(root);
+  if (registry) return new Set(registry.patterns.map((p) => p.id));
+  return new Set(await listPatternDocs(root));
+}
+
 export async function fileExists(p: string): Promise<boolean> {
   try {
     await stat(p);
@@ -69,6 +92,13 @@ export async function loadRegistry(root: string): Promise<RegistryData | null> {
 }
 
 export async function loadPatternDoc(root: string, patternId: string): Promise<string | null> {
+  try {
+    assertSafeSegment(patternId, 'patternId');
+  } catch {
+    return null;
+  }
+  const allowed = await allowedPatternIds(root);
+  if (!allowed.has(patternId)) return null;
   const filePath = path.join(root, 'patterns', `${patternId}.md`);
   return readFileIfExists(filePath);
 }
@@ -106,21 +136,18 @@ export async function loadSkill(root: string, skillName: string): Promise<SkillI
 
 export async function loadState(root: string, stateFile?: string): Promise<string | null> {
   const target = stateFile ?? 'STATE.md';
+  try {
+    assertSafeSegment(target, 'stateFile');
+  } catch {
+    return null;
+  }
+  if (!(STATE_FILE_CANDIDATES as readonly string[]).includes(target)) return null;
   return readFileIfExists(path.join(root, target));
 }
 
 export async function listStateFiles(root: string): Promise<string[]> {
-  const candidates = [
-    'STATE.md',
-    'pr-babysitter-state.md',
-    'ci-sweeper-state.md',
-    'post-merge-state.md',
-    'dependency-sweeper-state.md',
-    'changelog-drafter-state.md',
-    'issue-triage-state.md',
-  ];
   const found: string[] = [];
-  for (const f of candidates) {
+  for (const f of STATE_FILE_CANDIDATES) {
     if (await fileExists(path.join(root, f))) found.push(f);
   }
   return found;

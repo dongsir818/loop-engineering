@@ -1,5 +1,9 @@
 # Quickstart — 5 minutes to your first loop
 
+> **Stop prompting. Design the loop. Get a score.**
+
+Watch the score climb: [loop-audit-demo.gif](../assets/visuals/loop-audit-demo.gif) (10 → 70 → 100 in ~15s).
+
 Landed from [X](https://x.com), the [showcase](https://cobusgreyling.github.io/loop-engineering/), or a friend's README? This is the shortest path from zero to a running loop.
 
 **Week one rule:** report only. No auto-fix, no auto-merge. Read what the loop writes before you let it act.
@@ -18,9 +22,9 @@ Run this in the root of any git project (no clone required):
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
 ```
 
-Swap `--tool grok` for `claude` or `codex` if needed. Swap `--pattern` for any pattern from [patterns/registry.yaml](../patterns/registry.yaml).
+Swap `--tool grok` for `claude`, `codex`, or `opencode` if needed. Swap `--pattern` for any pattern from [patterns/registry.yaml](../patterns/registry.yaml).
 
-`loop-init` copies the starter kit, creates `STATE.md`, `LOOP.md`, `loop-budget.md`, and `loop-run-log.md`, then prints your first command.
+`loop-init` copies the starter kit, creates `STATE.md`, `LOOP.md`, `loop-budget.md`, and `loop-run-log.md`, then **prints your Loop Ready score** and first command.
 
 ## 3. Check cost before you schedule (30 seconds)
 
@@ -60,9 +64,27 @@ npx @cobusgreyling/loop-audit . --badge
 
 Use the first-run command printed by `loop-init` (pattern-specific). Week one: triage and state updates only.
 
+### OpenClaw
+
+No `loop-init --tool openclaw` yet — copy `skills/loop-triage/SKILL.md` and `STATE.md`, then create an isolated cron job. See [examples/openclaw/daily-triage.md](../examples/openclaw/daily-triage.md).
+
+### Opencode
+
+```bash
+npx @cobusgreyling/loop-init . --pattern daily-triage --tool opencode
+```
+
+Then schedule with cron or systemd — each tick runs headless via `opencode run`:
+
+```bash
+opencode run "Run loop-triage. Read STATE.md first. Update High Priority and Watch List. No auto-fix in week one." --agent loop-triage
+```
+
+See [examples/opencode/daily-triage.md](../examples/opencode/daily-triage.md) for worktree + verifier patterns (L2+).
+
 ### Cursor or Windsurf
 
-No `loop-init --tool cursor` yet — copy skills and state from any starter, then map scheduling to editor Automations or Workflows. See the [Cursor & Windsurf appendix](./primitives-matrix.md#appendix-editor-transfer-recipes-cursor--windsurf) in the primitives matrix.
+No `loop-init --tool cursor` yet — copy skills and state from any starter, then map scheduling to editor Automations or Workflows. See the [Opencode, Cursor & Windsurf appendix](./primitives-matrix.md#appendix-editor-transfer-recipes-opencode-cursor--windsurf) in the primitives matrix.
 
 ### GitHub Actions only
 
@@ -87,7 +109,7 @@ Commit the scaffold + first run update so `loop-audit` sees activity on the next
 ## Copy-paste cheat sheet
 
 ```bash
-# Scaffold
+# Scaffold (swap --tool for claude | codex | opencode)
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
 
 # Cost check
@@ -103,7 +125,7 @@ npx @cobusgreyling/loop-audit . --badge
 ## Learn the why (optional, 10 minutes)
 
 - [Loop Engineering essay](https://cobusgreyling.substack.com/p/loop-engineering) — concept and primitives
-- [Primitives matrix](./primitives-matrix.md) — Grok vs Claude vs Codex vs Cursor
+- [Primitives matrix](./primitives-matrix.md) — Grok vs Claude vs Codex vs OpenClaw vs Opencode vs Cursor
 - [Operating loops](./operating-loops.md) — when to kill a loop
 
 ---

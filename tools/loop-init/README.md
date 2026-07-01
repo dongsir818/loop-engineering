@@ -8,6 +8,7 @@ Scaffold loop engineering starters into your project by pattern and tool.
 
 ```bash
 npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
+npx @cobusgreyling/loop-init . --pattern daily-triage --tool opencode
 npx @cobusgreyling/loop-init . -p pr-babysitter -t claude
 npx @cobusgreyling/loop-init . -p dependency-sweeper --dry-run
 ```
@@ -41,6 +42,7 @@ Every scaffold also creates:
 - `grok` (default)
 - `claude`
 - `codex`
+- `opencode` — daily-triage ships `minimal-loop-opencode` (`skills/`, `AGENTS.md`, `opencode.json`)
 
 Falls back to Grok starter paths when a per-tool variant is not yet available.
 

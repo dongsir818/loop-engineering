@@ -6,9 +6,14 @@ Instead of stuffing all loop documentation into the prompt, agents can query onl
 
 ## Quick Start
 
+**v1 ships from this repo** (npm publish pending). From a cloned `loop-engineering` repo:
+
 ```bash
-npx @cobusgreyling/loop-mcp-server
+cd tools/mcp-server && npm ci && npm test
+node dist/index.js
 ```
+
+Set `LOOP_PROJECT_ROOT` to your target project (defaults to `cwd`).
 
 ### Configure in Claude Code / Grok / any MCP client
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawn } from 'node:child_process';
 import { cp, mkdir, readFile, writeFile, access } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +20,7 @@ const TOOL_SUFFIX = {
     grok: '',
     claude: '-claude',
     codex: '-codex',
+    opencode: '-opencode',
 };
 const L2_PATTERNS = new Set(['ci-sweeper', 'dependency-sweeper']);
 const PATTERNS_NEEDING_FIX = new Set([
@@ -99,6 +101,7 @@ async function copyTemplateSkill(templatesRoot, templateFile, targetDir, tool, s
         grok: path.join(targetDir, '.grok', 'skills', skillName, 'SKILL.md'),
         claude: path.join(targetDir, '.claude', 'skills', skillName, 'SKILL.md'),
         codex: path.join(targetDir, '.codex', 'skills', skillName, 'SKILL.md'),
+        opencode: path.join(targetDir, 'skills', skillName, 'SKILL.md'),
     };
     const dest = destByTool[tool];
     if (await exists(dest))
@@ -110,6 +113,7 @@ async function copyTemplateVerifier(templatesRoot, targetDir, tool, dryRun) {
         grok: path.join(targetDir, '.grok', 'skills', 'loop-verifier', 'SKILL.md'),
         claude: path.join(targetDir, '.claude', 'agents', 'loop-verifier.md'),
         codex: path.join(targetDir, '.codex', 'agents', 'verifier.toml'),
+        opencode: path.join(targetDir, 'skills', 'loop-verifier', 'SKILL.md'),
     };
     const dest = verifierPaths[tool];
     if (await exists(dest))
@@ -194,6 +198,14 @@ async function scaffoldObservability(pattern, tool, targetDir, templatesRoot, dr
     }
     await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-budget', targetDir, tool, 'loop-budget', dryRun);
 }
+async function scaffoldConstraints(targetDir, templatesRoot, tool, dryRun) {
+    const constraintsPath = path.join(targetDir, 'loop-constraints.md');
+    const constraintsTemplate = path.join(templatesRoot, 'loop-constraints.md');
+    if (!(await exists(constraintsPath)) && (await exists(constraintsTemplate))) {
+        await copyFile(constraintsTemplate, constraintsPath, dryRun);
+    }
+    await copyTemplateSkill(templatesRoot, 'SKILL.md.loop-constraints', targetDir, tool, 'loop-constraints', dryRun);
+}
 async function copyFile(src, dest, dryRun) {
     if (!(await exists(src)))
         return false;
@@ -206,45 +218,104 @@ async function copyFile(src, dest, dryRun) {
     console.log(`  copied: ${src} → ${dest}`);
     return true;
 }
+const OPENCODE_RUN = 'opencode run';
 function firstLoopCommand(pattern, tool) {
     const cmds = {
         'daily-triage': {
             grok: '/loop 1d Run loop-triage. Update STATE.md. No auto-fix in week one.',
             claude: '/loop 1d $loop-triage — update STATE.md. Report-only week one.',
             codex: 'Automation daily: $loop-triage → update STATE.md. Report-only.',
+            opencode: `${OPENCODE_RUN} "Run loop-triage. Read STATE.md first. Update High Priority and Watch List. No auto-fix in week one." --agent loop-triage`,
         },
         'pr-babysitter': {
             grok: '/loop 10m Run pr-review-triage. Update pr-babysitter-state.md. Worktree + minimal-fix + verifier for allowlisted PRs only. Escalate after 3 attempts.',
             claude: '/loop 10m $pr-review-triage — update pr-babysitter-state.md. No auto-merge.',
             codex: 'Automation 10m: pr-review-triage → pr-babysitter-state.md. No auto-merge.',
+            opencode: `${OPENCODE_RUN} "Run PR babysitter triage. Read pr-babysitter-state.md first. Report only — no code edits." --title "PR babysitter"`,
         },
         'ci-sweeper': {
             grok: '/loop 15m Run ci-triage on failing CI. Update ci-sweeper-state.md. Fix only regressions in worktree. Max 3 attempts.',
             claude: '/loop 15m $ci-triage — update ci-sweeper-state.md. Max 3 fix attempts.',
             codex: 'Automation 15m: ci-triage on CI failures. Max 3 attempts.',
+            opencode: `${OPENCODE_RUN} "Run ci-triage on failing CI. Update ci-sweeper-state.md. Report only in week one."`,
         },
         'dependency-sweeper': {
             grok: '/loop 6h Run dependency-triage. Patch-only auto-fix in worktree + verifier. Escalate majors and denylist.',
             claude: '/loop 6h $dependency-triage — patch-only with verifier. Escalate risky bumps.',
             codex: 'Automation 6h: dependency-triage. Patch-only with verifier.',
+            opencode: `${OPENCODE_RUN} "Run dependency-triage. Update dependency-sweeper-state.md. Report only — escalate majors."`,
         },
         'post-merge-cleanup': {
             grok: '/loop 1d Run post-merge-scan on recent merges. Update post-merge-state.md. Small fixes only in worktree.',
             claude: '/loop 1d $post-merge-scan — update post-merge-state.md. Small fixes only.',
             codex: 'Automation daily: post-merge-scan → post-merge-state.md.',
+            opencode: `${OPENCODE_RUN} "Run post-merge-scan. Update post-merge-state.md. Report only in week one."`,
         },
         'changelog-drafter': {
             grok: '/loop 1d Run changelog-scan on merges since last tag. Produce categorized draft in RELEASE_NOTES_DRAFT.md using draft-release-notes. Update changelog-drafter-state.md. Human review only.',
             claude: '/loop 1d $changelog-scan + draft-release-notes — write RELEASE_NOTES_DRAFT.md and update state. Human approves before publish.',
             codex: 'Automation daily: changelog-scan + draft-release-notes → RELEASE_NOTES_DRAFT.md. Human review.',
+            opencode: `${OPENCODE_RUN} "Run changelog-scan. Draft RELEASE_NOTES_DRAFT.md. Human review only — no publish."`,
         },
         'issue-triage': {
             grok: '/loop 2h Run issue-triage. Update issue-triage-state.md. Propose labels and priority only. No auto-apply. Human reviews the needs-human slice.',
             claude: '/loop 2h $issue-triage — update issue-triage-state.md. Suggest labels on allowlisted areas only. Report mode week one.',
             codex: 'Automation 2h: issue-triage → issue-triage-state.md. Propose only.',
+            opencode: `${OPENCODE_RUN} "Run issue-triage. Update issue-triage-state.md. Propose labels only — no auto-apply."`,
         },
     };
     return cmds[pattern][tool];
+}
+async function resolveAuditCli() {
+    const monorepo = path.resolve(PACKAGE_ROOT, '../loop-audit/dist/cli.js');
+    if (await exists(monorepo))
+        return monorepo;
+    try {
+        const { createRequire } = await import('node:module');
+        const require = createRequire(import.meta.url);
+        const pkg = require.resolve('@cobusgreyling/loop-audit/package.json');
+        return path.join(path.dirname(pkg), 'dist/cli.js');
+    }
+    catch {
+        return null;
+    }
+}
+async function runAuditJson(cli, targetDir) {
+    return new Promise((resolve, reject) => {
+        const child = spawn('node', [cli, targetDir, '--json'], {
+            stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        let stdout = '';
+        child.stdout.on('data', (chunk) => {
+            stdout += chunk.toString();
+        });
+        child.on('error', reject);
+        child.on('close', () => {
+            if (stdout.trim())
+                resolve(stdout);
+            else
+                reject(new Error('loop-audit produced no output'));
+        });
+    });
+}
+async function runAuditSummary(targetDir) {
+    const cli = await resolveAuditCli();
+    if (!cli)
+        return null;
+    try {
+        const stdout = await runAuditJson(cli, targetDir);
+        return JSON.parse(stdout);
+    }
+    catch {
+        return null;
+    }
+}
+function formatScoreBar(score, width = 20) {
+    const filled = Math.max(0, Math.min(width, Math.round((score / 100) * width)));
+    return `${'█'.repeat(filled)}${'░'.repeat(width - filled)}  ${score}/100`;
+}
+function auditTargetArg(target, targetDir) {
+    return target === '.' ? '.' : targetDir;
 }
 async function main() {
     const args = parseArgs(process.argv.slice(2));
@@ -252,7 +323,7 @@ async function main() {
         console.log(`loop-init — scaffold loop engineering starters
 
 Usage:
-  loop-init [target-dir] --pattern <name> --tool <grok|claude|codex>
+  loop-init [target-dir] --pattern <name> --tool <grok|claude|codex|opencode>
 
 Patterns:
   daily-triage (default)
@@ -272,6 +343,7 @@ Options:
 Examples:
   npx @cobusgreyling/loop-init . --pattern daily-triage --tool grok
   npx @cobusgreyling/loop-init . -p pr-babysitter -t claude
+  npx @cobusgreyling/loop-init . -p daily-triage -t opencode
 `);
         process.exit(0);
     }
@@ -289,7 +361,7 @@ Examples:
     const targetDir = path.resolve(target);
     const baseStarter = PATTERN_STARTERS[pattern];
     const suffix = TOOL_SUFFIX[tool];
-    const starterName = pattern === 'daily-triage' ? `minimal-loop${suffix}` : baseStarter;
+    const starterName = `${baseStarter}${suffix}`;
     const startersRoot = await resolveBundledOrMonorepo('starters');
     const templatesRoot = await resolveBundledOrMonorepo('templates');
     const starterRoot = path.join(startersRoot, starterName);
@@ -305,33 +377,52 @@ Examples:
         ? starterRoot
         : path.join(startersRoot, baseStarter);
     console.log(`\nloop-init: ${pattern} → ${targetDir} (${tool})${dryRun ? ' [dry-run]' : ''}\n`);
-    const skillRoots = [
-        path.join(effectiveStarter, '.grok', 'skills'),
-        path.join(effectiveStarter, '.claude', 'skills'),
-        path.join(effectiveStarter, '.codex', 'skills'),
-    ];
-    for (const skillsDir of skillRoots) {
-        if (!(await exists(skillsDir)))
-            continue;
-        const toolPrefix = skillsDir.includes('.grok')
-            ? '.grok/skills'
-            : skillsDir.includes('.claude')
-                ? '.claude/skills'
-                : '.codex/skills';
-        const entries = await readDirNames(skillsDir);
-        for (const entry of entries) {
-            await copyDir(path.join(skillsDir, entry), path.join(targetDir, toolPrefix, entry), dryRun);
+    if (tool === 'opencode') {
+        const skillsDir = path.join(effectiveStarter, 'skills');
+        if (await exists(skillsDir)) {
+            const entries = await readDirNames(skillsDir);
+            for (const entry of entries) {
+                await copyDir(path.join(skillsDir, entry), path.join(targetDir, 'skills', entry), dryRun);
+            }
+        }
+        const agentsMd = path.join(effectiveStarter, 'AGENTS.md');
+        if (await exists(agentsMd)) {
+            await copyFile(agentsMd, path.join(targetDir, 'AGENTS.md'), dryRun);
+        }
+        const opencodeJson = path.join(effectiveStarter, 'opencode.json.example');
+        if (await exists(opencodeJson)) {
+            await copyFile(opencodeJson, path.join(targetDir, 'opencode.json'), dryRun);
         }
     }
-    const agentFiles = [
-        { src: path.join(effectiveStarter, '.claude', 'agents'), dest: path.join(targetDir, '.claude', 'agents') },
-        { src: path.join(effectiveStarter, '.codex', 'agents'), dest: path.join(targetDir, '.codex', 'agents') },
-    ];
-    for (const { src, dest } of agentFiles) {
-        if (await exists(src)) {
-            const entries = await readDirNames(src);
+    else {
+        const skillRoots = [
+            path.join(effectiveStarter, '.grok', 'skills'),
+            path.join(effectiveStarter, '.claude', 'skills'),
+            path.join(effectiveStarter, '.codex', 'skills'),
+        ];
+        for (const skillsDir of skillRoots) {
+            if (!(await exists(skillsDir)))
+                continue;
+            const toolPrefix = skillsDir.includes('.grok')
+                ? '.grok/skills'
+                : skillsDir.includes('.claude')
+                    ? '.claude/skills'
+                    : '.codex/skills';
+            const entries = await readDirNames(skillsDir);
             for (const entry of entries) {
-                await copyFile(path.join(src, entry), path.join(dest, entry), dryRun);
+                await copyDir(path.join(skillsDir, entry), path.join(targetDir, toolPrefix, entry), dryRun);
+            }
+        }
+        const agentFiles = [
+            { src: path.join(effectiveStarter, '.claude', 'agents'), dest: path.join(targetDir, '.claude', 'agents') },
+            { src: path.join(effectiveStarter, '.codex', 'agents'), dest: path.join(targetDir, '.codex', 'agents') },
+        ];
+        for (const { src, dest } of agentFiles) {
+            if (await exists(src)) {
+                const entries = await readDirNames(src);
+                for (const entry of entries) {
+                    await copyFile(path.join(src, entry), path.join(dest, entry), dryRun);
+                }
             }
         }
     }
@@ -352,7 +443,8 @@ Examples:
     }
     await copyL2Templates(pattern, tool, targetDir, templatesRoot, dryRun);
     await scaffoldObservability(pattern, tool, targetDir, templatesRoot, dryRun);
-    if (!dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
+    await scaffoldConstraints(targetDir, templatesRoot, tool, dryRun);
+    if (tool !== 'opencode' && !dryRun && !(await exists(path.join(targetDir, 'AGENTS.md')))) {
         const agentsTemplate = `# AGENTS.md
 
 ## Test commands
@@ -366,10 +458,29 @@ npm run lint
         await writeFile(path.join(targetDir, 'AGENTS.md'), agentsTemplate);
         console.log('  created: AGENTS.md (template)');
     }
-    console.log('\n=== Next steps ===');
-    console.log(`  npx @cobusgreyling/loop-audit ${target === '.' ? '.' : target} --suggest`);
-    console.log(`  npx @cobusgreyling/loop-cost --pattern ${pattern}`);
-    console.log(`  First loop command (${tool}):\n  ${firstLoopCommand(pattern, tool)}\n`);
+    const auditArg = auditTargetArg(target, targetDir);
+    if (!dryRun) {
+        const audit = await runAuditSummary(targetDir);
+        if (audit) {
+            console.log('');
+            console.log(`✓ Loop Ready: ${audit.score}/100 (${audit.level})`);
+            console.log(`  ${formatScoreBar(audit.score)}`);
+            console.log(`  ${audit.assessment}`);
+            console.log('');
+            console.log('Paste badge in README:');
+            console.log(`  npx @cobusgreyling/loop-audit ${auditArg} --badge`);
+        }
+        else {
+            console.log('\n=== Loop Ready score ===');
+            console.log(`  npx @cobusgreyling/loop-audit ${auditArg} --suggest`);
+        }
+    }
+    console.log('');
+    console.log(`First loop (${tool}):`);
+    console.log(`  ${firstLoopCommand(pattern, tool)}`);
+    console.log('');
+    console.log(`Estimate cost: npx @cobusgreyling/loop-cost --pattern ${pattern} --level L1`);
+    console.log('');
 }
 async function readDirNames(dir) {
     const { readdir } = await import('node:fs/promises');
